@@ -1,0 +1,50 @@
+schema_version: 1
+skill: seos-core-skill
+skill_version: v100
+status: PROPOSED
+
+trust_policy:
+  default_trust: UNVERIFIED
+  classes: [FACT, ASSERTION, INFERENCE, UNKNOWN]
+  only_FACT_may_open_gate: true
+  ttl_days: 14
+
+resolution:
+  on_session_start:
+    - load: memory.yaml
+    - for_each_entry:
+        if: repo_state_differs
+        then: mark STALE
+        elif: age > ttl_days
+        then: mark STALE
+        else: keep
+    - stale_entries: must_reverify_before_use
+  conflict_rule: repo_reality_wins
+  missing_rule: UNKNOWN
+
+gates:
+  independent_verification: NOT_RUN
+  release_authorization: DENY
+  fail_closed_chain: [NO_EVIDENCE, NO_CLAIM, NO_TRUST, NO_RELEASE]
+
+entries:
+  - id: M-001
+    kind: ASSERTION
+    statement: "Repo baseline คือ SEOS-H Baseline v1.0 / Blue Prince"
+    source: user
+    verified_at: null
+    evidence: null
+    ttl_days: 14
+  - id: M-002
+    kind: UNKNOWN
+    statement: "สถานะ CI ล่าสุดของ main"
+    source: null
+    verified_at: null
+    evidence: null
+
+write_rules:
+  - "เขียนเฉพาะสิ่งที่ผู้ใช้ระบุ หรือที่ตรวจแล้วพร้อม evidence"
+  - "การเลื่อน ASSERTION -> FACT ต้องมี evidence (CI run id หรือ sha256)"
+  - "ห้ามเก็บ secret, private key หรือ token"
+change_log:
+  - "v100: initial draft (PROPOSED)"
