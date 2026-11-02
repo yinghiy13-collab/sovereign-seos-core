@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEOS Master Console</title>
+<style>
+  :root { --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #c9d1d9; --accent: #58a6ff; --ok: #3fb950; --fail: #f85149; }
+  body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+  .header { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+  .header h1 { margin: 0; color: var(--accent); font-size: 24px; }
+  .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+  .badge.deny { background: rgba(248,81,73,0.2); color: var(--fail); border: 1px solid var(--fail); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
+  .card h3 { margin-top: 0; font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+  .status { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; font-family: monospace; }
+  .status .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+  .status .dot.ok { background: var(--ok); }
+  .status .dot.fail { background: var(--fail); }
+  .json-box { background: #000; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; overflow-x: auto; color: #a5d6ff; }
+  .btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛡️ SEOS Master Console <span class="badge deny" id="auth-badge">AUTHORIZATION: DENY</span></h1>
+    <p>Fail-Closed Evidence-Gated Pipeline</p>
+  </div>
+  
+  <div class="grid">
+    <div class="card">
+      <h3>Pipeline Layers (L1-L7)</h3>
+      <div class="status"><span><span class="dot ok"></span>L1 AST Scan</span> <span>SUCCESS</span></div>
+      <div class="status"><span><span class="dot ok"></span>L4 Rego Policy</span> <span>SUCCESS</span></div>
+      <div class="status"><span><span class="dot ok"></span>L5 Ed25519 Witness</span> <span>SUCCESS</span></div>
+      <div class="status"><span><span class="dot ok"></span>L6 Tamper Test</span> <span>SUCCESS</span></div>
+      <div class="status"><span><span class="dot ok"></span>L7 Release Gate</span> <span>SUCCESS</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Release Decision (L7)</h3>
+      <p>ระบบตรวจสอบครบถ้วนแล้ว แต่ยังปฏิเสธการ Release เพราะไม่มี Independent Verification</p>
+      <div class="json-box" id="decision-json">
+        Loading...
+      </div>
+      <button class="btn" onclick="simulateTamper()">🔴 จำลองการถูกโจมตี (Tamper)</button>
+    </div>
+  </div>
+
+<script>
+  // ข้อมูลจำลองที่ได้จาก CI Pipeline
+  const mockData = {
+    "decision": "ALLOW_CANDIDATE",
+    "layers": { "l1-ast": "success", "l4-rego": "success", "l5-witness": "success", "l6-tamper": "success" },
+    "evidence_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent_verification": "NOT_RUN",
+    "release_authorization": "DENY"
+  };
+
+  function render(data) {
+    document.getElementById('decision-json').innerText = JSON.stringify(data, null, 2);
+    const badge = document.getElementById('auth-badge');
+    if (data.release_authorization === "DENY") {
+      badge.className = "badge deny";
+      badge.innerText = "AUTHORIZATION: DENY";
+    } else {
+      badge.className = "badge ok";
+      badge.innerText = "AUTHORIZATION: ALLOW";
+    }
+  }
+
+  function simulateTamper() {
+    // จำลองสถานการณ์ที่มีการแก้โค้ด (Fail-Closed)
+    const tamperedData = { ...mockData };
+    tamperedData.decision = "DENY";
+    tamperedData.layers["l6-tamper"] = "failure";
+    tamperedData.evidence_digest = "sha256:TAMPERED_DATA_DETECTED";
+    render(tamperedData);
+    alert("🚨 ตรวจพบการแก้ไขข้อมูล! ระบบตัดการทำงานทันที (Fail-Closed)");
+  }
+
+  // โหลดครั้งแรก
+  render(mockData);
+</script>
+</body>
+</html>
