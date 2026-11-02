@@ -1,8 +1,37 @@
-- name: Upload Evidence
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: prove-decision
-    path: |
-      proof/
-      artifacts/
+name: Prove Gate (day-N)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install pyyaml scikit-learn numpy scipy
+      - name: Run Prove (C1-C7)
+        run: make prove
+      - name: Check Decision
+        run: |
+          DEC=$(python -c "import json;print(json.load(open('proof/report.json'))['decision'])")
+          if [ "$DEC" != "ALLOW" ]; then
+            echo "❌ Release Gate returned DENY"
+            exit 1
+          fi
+      - name: Upload Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prove-decision
+          path: |
+            proof/
+            artifacts/
