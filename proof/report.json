@@ -1,0 +1,41 @@
+{
+  "decision": "ALLOW",
+  "checks": [
+    {
+      "check": "C1",
+      "status": "PASS",
+      "evidence_digest": "78a7e98611d20d17"
+    },
+    {
+      "check": "C2",
+      "status": "PASS",
+      "evidence_digest": "90214fb1bf28976e"
+    },
+    {
+      "check": "C3",
+      "status": "PASS",
+      "evidence_digest": "78a7e98611d20d17"
+    },
+    {
+      "check": "C4",
+      "status": "PASS",
+      "evidence_digest": "90214fb1bf28976e"
+    },
+    {
+      "check": "C5",
+      "status": "PASS",
+      "evidence_digest": "05a6ef239f8430a6"
+    },
+    {
+      "check": "C6",
+      "status": "PASS",
+      "evidence_digest": "5fc2d84c83980bdf"
+    },
+    {
+      "check": "C7",
+      "status": "PASS",
+      "evidence_digest": "ad009f84d5829f03"
+    }
+  ],
+  "evidence_root": "702710a3ba7a9e0f038d06d65aab4272e00eadf4afaa05e4e68b9a536ff94ff9"
+}

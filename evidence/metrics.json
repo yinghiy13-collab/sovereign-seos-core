@@ -1,0 +1,1 @@
+{"skills":[{"skill_id":"reader","n_trials":40,"errors":2,"baseline_error_rate":0.1},{"skill_id":"verifier","n_trials":50,"errors":1,"baseline_error_rate":0.05}]}
