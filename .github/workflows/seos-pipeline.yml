@@ -80,8 +80,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: test -f tools/witness_sim.py || { echo "NO_EVIDENCE: tools/witness_sim.py missing"; exit 1; }
-      - run: mkdir -p reports && python tools/witness_sim.py --k 2 --n 3 --out reports/l5_witness.json
+      - name: Check script
+        run: |
+          if [ ! -f tools/witness_sim.py ]; then
+            echo "NO_EVIDENCE: tools/witness_sim.py missing"
+            exit 1
+          fi
+      - name: Run Simulation
+        run: |
+          mkdir -p reports
+          python tools/witness_sim.py --k 2 --n 3 --out reports/l5_witness.json
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: l5, path: reports/l5_witness.json }
@@ -94,9 +102,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: test -f tools/tamper_test.py || { echo "NO_EVIDENCE: tools/tamper_test.py missing"; exit 1; }
+      - name: Check script
+        run: |
+          if [ ! -f tools/tamper_test.py ]; then
+            echo "NO_EVIDENCE: tools/tamper_test.py missing"
+            exit 1
+          fi
       - name: Tamper then verify
-        run: mkdir -p reports && python tools/tamper_test.py --out reports/l6_tamper.json
+        run: |
+          mkdir -p reports
+          python tools/tamper_test.py --out reports/l6_tamper.json
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: l6, path: reports/l6_tamper.json }
@@ -122,12 +137,14 @@ jobs:
           h=hashlib.sha256()
           for p in sorted(glob.glob("reports/*.json")):
               h.update(open(p,"rb").read())
-          out={"decision":"ALLOW_CANDIDATE" if allow else "DENY",
+          out={
+               "decision":"ALLOW_CANDIDATE" if allow else "DENY",
                "layers":layers,
                "evidence_digest":"sha256:"+h.hexdigest(),
                "commit_sha":"${{ env.COMMIT_SHA }}",
                "independent_verification":"NOT_RUN",
-               "release_authorization":"DENY"} 
+               "release_authorization":"DENY" 
+          }
           json.dump(out,open("reports/release_decision.json","w"),indent=2)
           print(json.dumps(out,indent=2))
           sys.exit(0 if allow else 1)
