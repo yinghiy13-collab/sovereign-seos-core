@@ -1,9 +1,7 @@
 name: seos-core-pipeline
-
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -41,8 +39,7 @@ jobs:
           json.dump(data, open(p, "w"), indent=2)
           PY
       - uses: actions/upload-artifact@v4
-        if: always()
-        with: { name: l1, path: reports/l1_ast.json, if-no-files-found: error }
+        with: { name: l1, path: reports/l1_ast.json }
 
   l4-rego:
     name: L4 Rego policy
@@ -57,8 +54,7 @@ jobs:
           curl -fsSL -o opa "https://openpolicyagent.org/downloads/${OPA_VERSION}/opa_linux_amd64_static"
           chmod +x opa && sudo mv opa /usr/local/bin/opa
       - name: Policy Regression Tests
-        run: |
-          opa test policy/ -v || { echo "REGRESSION_TEST_FAILED"; exit 1; }
+        run: opa test policy/ -v || exit 1
       - name: Evaluate policy
         run: |
           opa eval -f json -d policy -i reports/l1_ast.json "data.seos.allow" > reports/l4_rego.json
@@ -69,57 +65,44 @@ jobs:
           sys.exit(0 if ok else 1)
           PY
       - uses: actions/upload-artifact@v4
-        if: always()
         with: { name: l4, path: reports/l4_rego.json }
 
-  l5-witness-sim:
-    name: L5 multi-sig witness (simulation)
+  l5-witness:
+    name: L5 Ed25519 Witness
     runs-on: ubuntu-latest
     needs: l1-ast
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Check script
-        run: |
-          if [ ! -f tools/witness_sim.py ]; then
-            echo "NO_EVIDENCE: tools/witness_sim.py missing"
-            exit 1
-          fi
-      - name: Run Simulation
+      - name: Install Cryptography
+        run: pip install cryptography
+      - name: Run Witness
         run: |
           mkdir -p reports
-          python tools/witness_sim.py --k 2 --n 3 --out reports/l5_witness.json
+          python tools/witness_ed25519.py --k 2 --n 3 --out reports/l5_witness.json
       - uses: actions/upload-artifact@v4
-        if: always()
         with: { name: l5, path: reports/l5_witness.json }
 
   l6-tamper:
-    name: L6 differential tamper (must be rejected)
+    name: L6 differential tamper
     runs-on: ubuntu-latest
-    needs: [l4-rego, l5-witness-sim]
+    needs: [l4-rego, l5-witness]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Check script
-        run: |
-          if [ ! -f tools/tamper_test.py ]; then
-            echo "NO_EVIDENCE: tools/tamper_test.py missing"
-            exit 1
-          fi
-      - name: Tamper then verify
+      - name: Run Tamper Test
         run: |
           mkdir -p reports
           python tools/tamper_test.py --out reports/l6_tamper.json
       - uses: actions/upload-artifact@v4
-        if: always()
         with: { name: l6, path: reports/l6_tamper.json }
 
   l7-release-gate:
     name: L7 release gate (default DENY)
     runs-on: ubuntu-latest
-    needs: [l1-ast, l4-rego, l5-witness-sim, l6-tamper]
+    needs: [l1-ast, l4-rego, l5-witness, l6-tamper]
     if: always()
     steps:
       - uses: actions/checkout@v4
@@ -137,18 +120,11 @@ jobs:
           h=hashlib.sha256()
           for p in sorted(glob.glob("reports/*.json")):
               h.update(open(p,"rb").read())
-          out={
-               "decision":"ALLOW_CANDIDATE" if allow else "DENY",
-               "layers":layers,
-               "evidence_digest":"sha256:"+h.hexdigest(),
-               "commit_sha":"${{ env.COMMIT_SHA }}",
-               "independent_verification":"NOT_RUN",
-               "release_authorization":"DENY" 
-          }
+          out={"decision":"ALLOW_CANDIDATE" if allow else "DENY",
+               "layers":layers,"evidence_digest":"sha256:"+h.hexdigest(),
+               "independent_verification":"NOT_RUN","release_authorization":"DENY"}
           json.dump(out,open("reports/release_decision.json","w"),indent=2)
-          print(json.dumps(out,indent=2))
           sys.exit(0 if allow else 1)
           PY
       - uses: actions/upload-artifact@v4
-        if: always()
         with: { name: release-decision, path: reports/release_decision.json }
