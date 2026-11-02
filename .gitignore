@@ -1,0 +1,8 @@
+# Ephemeral CI Artifacts
+reports/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+.env.*
