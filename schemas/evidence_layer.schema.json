@@ -4,8 +4,10 @@
   "properties": {
     "layer": { "type": "string" },
     "decision": { "enum": ["ALLOW", "DENY"] },
-    "status": { "enum": ["PASS", "FAIL", "NOT_RUN"] }
+    "status": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+    "evidence_root": { "type": "string" },
+    "checks": { "type": "array" }
   },
-  "required": ["layer", "decision", "status"],
-  "additionalProperties": false
+  "required": ["decision"],
+  "additionalProperties": true
 }
