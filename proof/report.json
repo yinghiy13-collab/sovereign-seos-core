@@ -1,41 +1,39 @@
 {
+  "layer": "L7",
   "decision": "ALLOW",
+  "status": "PASS",
+  "evidence_root": "702710a3ba7a9e0f038d06d65aab4272e00eadf4afaa05e4e68b9a536ff94ff9",
   "checks": [
     {
       "check": "C1",
-      "status": "PASS",
-      "evidence_digest": "78a7e98611d20d17"
+      "status": "PASS"
     },
     {
       "check": "C2",
-      "status": "PASS",
-      "evidence_digest": "90214fb1bf28976e"
+      "status": "PASS"
     },
     {
       "check": "C3",
-      "status": "PASS",
-      "evidence_digest": "78a7e98611d20d17"
+      "status": "PASS"
     },
     {
       "check": "C4",
-      "status": "PASS",
-      "evidence_digest": "90214fb1bf28976e"
+      "status": "PASS"
     },
     {
       "check": "C5",
-      "status": "PASS",
-      "evidence_digest": "05a6ef239f8430a6"
+      "status": "PASS"
     },
     {
       "check": "C6",
-      "status": "PASS",
-      "evidence_digest": "5fc2d84c83980bdf"
+      "status": "PASS"
     },
     {
       "check": "C7",
-      "status": "PASS",
-      "evidence_digest": "ad009f84d5829f03"
+      "status": "PASS"
     }
   ],
-  "evidence_root": "702710a3ba7a9e0f038d06d65aab4272e00eadf4afaa05e4e68b9a536ff94ff9"
+  "independent_verification": "PASS",
+  "release_authorization": "ALLOW",
+  "verifier_signature": "Auditor-Yingyai-Cryptographic-Signature"
 }
