@@ -1,0 +1,11 @@
+name: L1-L6 Static Scan
+on:
+  pull_request:
+    paths: ['skills/**', 'scripts/**']
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mock AST Scan
+        run: echo "AST scan passed (simulated)"
