@@ -17,9 +17,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install pyyaml scikit-learn numpy scipy
+        run: pip install pyyaml scikit-learn numpy scipy jsonschema
       - name: Run Prove (C1-C7)
         run: make prove
+      - name: Validate Evidence Schema (Fail-Closed)
+        run: python tools/schema_validator.py --file proof/report.json --layer L7
       - name: Check Decision
         run: |
           DEC=$(python -c "import json;print(json.load(open('proof/report.json'))['decision'])")
@@ -27,11 +29,3 @@ jobs:
             echo "❌ Release Gate returned DENY"
             exit 1
           fi
-      - name: Upload Evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: prove-decision
-          path: |
-            proof/
-            artifacts/
